@@ -3,10 +3,12 @@ import jp.nyatla.nyar4psg.*;
 
 Capture cam;
 MultiMarker nya;
-PImage eye;
+PImage eye1;
+PImage eye2;
 
 void setup() {
-  eye = loadImage("giphy.gif");
+  eye1 = loadImage("eye1.png");
+  eye2 = loadImage("eye2.png");
   size(640,480,P3D);
   colorMode(RGB, 100);
   println(MultiMarker.VERSION);  
@@ -35,7 +37,9 @@ void draw()
     //fill(0,100*(i%2),100*((i+1)%2));
     translate(0,0,20);
     //box(40);  
-    image(eye, 0, 0); 
+    image(eye1, 0, 0);
+    delay(500);
+    image(eye2, 0, 0); 
     nya.endTransform();
   }
 }
