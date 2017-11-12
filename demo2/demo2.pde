@@ -8,7 +8,8 @@ KinectProjectorToolkit kpc;
 ArrayList<ProjectedContour> projectedContours;
 ArrayList<PGraphics> projectedGraphics;
 
-PImage saved_image;
+PImage snapshot;
+PImage mirrorSnapshot;
 
 void setup()
 {
@@ -26,12 +27,11 @@ void setup()
   // setup Kinect Projector Toolkit
   kpc = new KinectProjectorToolkit(this, kinect.depthWidth(), kinect.depthHeight());
   kpc.loadCalibration("calibration.txt");
-  kpc.setContourSmoothness(3);
+  kpc.setContourSmoothness(4);
   
   projectedGraphics = initializeProjectedGraphics();
   
-  saved_image = loadImage("latest.jpg");
-   
+  snapshot = loadImage("latest.jpg");
 }
 
 void draw()
@@ -54,7 +54,12 @@ void draw()
   
   // draw projected contours
   background(255);
-  image(saved_image, 0, 0);
+  image(snapshot, 0, 0);
+  
+//  PImage cameraIcon = loadImage("camera_icon.png");
+  
+//  image(cameraIcon, displayWidth - 100, 0);
+
   for (int i=0; i<projectedContours.size(); i++) {
     ProjectedContour projectedContour = projectedContours.get(i);
     PGraphics pg = projectedGraphics.get(i%3);    
@@ -66,6 +71,14 @@ void draw()
     }
     endShape();
   }
+  
+  mirrorSnapshot = get();
+  pushMatrix();
+  translate(mirrorSnapshot.width,0);
+  scale(-1,1);
+  image(mirrorSnapshot,0,0);
+  popMatrix();
+  
 }
 
 ArrayList<PGraphics> initializeProjectedGraphics() {
@@ -84,11 +97,8 @@ ArrayList<PGraphics> initializeProjectedGraphics() {
 
 //save image
 void keyReleased() {
-//  if (key == 's' || key == 'S') saveFrame (timestamp () + "_##.jpg");
-//  if (key == 's' || key == 'S') saveFrame ("latest.jpg");
-  if (key == 's' || key == 'S') saved_image = get();
-  print(saved_image);
-  print("save");
+  if (key == 's' || key == 'S') snapshot = get();
+  println("snapshot");
 }
 
 
