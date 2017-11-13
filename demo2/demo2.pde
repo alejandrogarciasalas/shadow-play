@@ -11,6 +11,8 @@ ArrayList<PGraphics> projectedGraphics;
 PImage snapshot;
 PImage mirrorSnapshot;
 
+boolean mirrorMode = false;
+
 void setup()
 {
   size(displayWidth, displayHeight, P2D); 
@@ -56,9 +58,11 @@ void draw()
   background(255);
   image(snapshot, 0, 0);
   
-//  PImage cameraIcon = loadImage("camera_icon.png");
-  
-//  image(cameraIcon, displayWidth - 100, 0);
+  PImage cameraIcon = loadImage("camera_icon.png");
+  image(cameraIcon, displayWidth - 100, 0);
+
+  PImage mirrorIcon = loadImage("mirror_icon.png");
+  image(mirrorIcon, displayWidth - 160, 0);
 
   for (int i=0; i<projectedContours.size(); i++) {
     ProjectedContour projectedContour = projectedContours.get(i);
@@ -72,12 +76,15 @@ void draw()
     endShape();
   }
   
-  mirrorSnapshot = get();
-  pushMatrix();
-  translate(mirrorSnapshot.width,0);
-  scale(-1,1);
-  image(mirrorSnapshot,0,0);
-  popMatrix();
+  if (mirrorMode == true) {
+    mirrorSnapshot = get();
+    pushMatrix();
+    translate(mirrorSnapshot.width,0);
+    scale(-1,1);
+    image(mirrorSnapshot,0,0);
+    popMatrix();  
+  }
+
   
 }
 
@@ -97,8 +104,14 @@ ArrayList<PGraphics> initializeProjectedGraphics() {
 
 //save image
 void keyReleased() {
-  if (key == 's' || key == 'S') snapshot = get();
-  println("snapshot");
+  if (key == 's' || key == 'S') {
+    snapshot = get();
+    println("snapshot");
+  }
+  if (key == 'm' || key == 'M') {
+    mirrorMode = !mirrorMode;
+  }  
+  
 }
 
 
