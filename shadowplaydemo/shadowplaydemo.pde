@@ -1,4 +1,4 @@
-import gab.opencv.*;
+mmimport gab.opencv.*;
 import SimpleOpenNI.*;
 import KinectProjectorToolkit.*;
 
