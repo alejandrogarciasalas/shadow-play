@@ -1,4 +1,4 @@
-mmimport gab.opencv.*;
+import gab.opencv.*;
 import SimpleOpenNI.*;
 import KinectProjectorToolkit.*;
 
@@ -248,8 +248,3 @@ void onLostUser(SimpleOpenNI curContext, int userId) {
 void onVisibleUser(SimpleOpenNI curContext, int userId) {
   println("onVisibleUser - userId: " + userId);
 }
-
-
-
-
-
