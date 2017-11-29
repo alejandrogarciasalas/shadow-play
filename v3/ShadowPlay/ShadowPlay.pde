@@ -10,10 +10,17 @@ PImage src, preProcessedImage, processedImage;
 // CALIBRATION VARS
 int PROJECTOR_WIDTH = 1024; // old was 640
 int PROJECTOR_HEIGHT = 768; // old was 480
-float contrast = 1.35;
-int brightness = 0;
+
+// get from calibration program
+float contrast = 1.35; 
 int threshold = 75;
 int blurSize = 4;
+
+int zoom = 0;
+
+// change if neccesary...
+int brightness = 0;
+
 
 // STATE VARS
 boolean mirrorMode = false;
@@ -44,7 +51,6 @@ void draw() {
   if (video.available()) {
     video.read();
   }
-  
   opencv.loadImage(video);
   src = opencv.getSnapshot();
   
@@ -94,6 +100,7 @@ void draw() {
   if (debugging == true) {
     image(processedImage, 0, 0, width/4, height/4);
   }
+  //image(processedImage, 0 - zoom, 0 - zoom, width + zoom, height + zoom);
 }
 
 
@@ -118,4 +125,16 @@ void keyReleased() {
     clear = true;
     println("clear");
   }      
+}
+
+void keyPressed() {
+  if (key == CODED) {
+    if (keyCode == UP) {
+      zoom += 1;
+      println(zoom);
+    } else if (keyCode == DOWN) {
+      zoom -= 1;
+      println(zoom);
+    } 
+  }
 }
