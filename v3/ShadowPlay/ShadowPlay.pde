@@ -98,9 +98,12 @@ void draw() {
     popMatrix();  
   } 
   if (debugging == true) {
-    image(processedImage, 0, 0, width/4, height/4);
+    //image(processedImage, 0, 0, width/4, height/4);
+    //println(mouseX);
+    zoom = mouseX;
+    image(processedImage, 0 - zoom, 0 - zoom, width + zoom, height + zoom);
   }
-  //image(processedImage, 0 - zoom, 0 - zoom, width + zoom, height + zoom);
+  
 }
 
 
