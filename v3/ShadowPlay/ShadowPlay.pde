@@ -17,8 +17,8 @@ int blurSize = 4;
 
 // STATE VARS
 boolean mirrorMode = false;
-boolean debugging = true;
 boolean clear=false;
+boolean debugging = false;
 
 // EFFECT VARS
 PImage snapshot;
@@ -36,6 +36,8 @@ void setup() {
   size(1024, 768, P2D); // SHOULD MATCH PROJECTOR DIMENSIONS
   
   snapshot = loadImage("blankbg.jpg");
+  
+  println("debugging: " + debugging);
 }
 
 void draw() {
@@ -80,8 +82,18 @@ void draw() {
   }
   image(snapshot, 0, 0);
     
-  //image(processedImage, 0, 0);
-  
+
+  if (mirrorMode == true) {
+    mirrorSnapshot = opencv.getSnapshot(); // get whatever is currently on opencv, should be processed image video feed
+    pushMatrix();
+    translate(mirrorSnapshot.width,0);
+    scale(-1,1);
+    image(mirrorSnapshot,0,0);
+    popMatrix();  
+  } 
+  if (debugging == true) {
+    image(processedImage, 0, 0, width/4, height/4);
+  }
 }
 
 
@@ -99,8 +111,7 @@ void keyReleased() {
 
   if (key == 'd' || key == 'D') {
     debugging = !debugging;
-    println("debugging");
-    print(debugging);
+    println("debugging: " + debugging);
   }
  
   if (key == 'c' || key == 'C') {
