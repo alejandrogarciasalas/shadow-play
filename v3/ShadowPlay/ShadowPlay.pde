@@ -15,19 +15,27 @@ int brightness = 0;
 int threshold = 75;
 int blurSize = 4;
 
+// STATE VARS
+boolean mirrorMode = false;
+boolean debugging = true;
+boolean clear=false;
+
+// EFFECT VARS
+PImage snapshot;
+PImage mirrorSnapshot;
+
 void setup() {
   frameRate(15);
   
   video = new Capture(this, PROJECTOR_WIDTH, PROJECTOR_HEIGHT);
   //video = new Capture(this, 640, 480, "USB2.0 PC CAMERA");
-
   video.start();
   
   opencv = new OpenCV(this, PROJECTOR_WIDTH, PROJECTOR_HEIGHT);
-  // contours = new ArrayList<Contour>();
-  // blobList = new ArrayList<Blob>();
   
-  size(1024, 768, P2D);
+  size(1024, 768, P2D); // SHOULD MATCH PROJECTOR DIMENSIONS
+  
+  snapshot = loadImage("blankbg.jpg");
 }
 
 void draw() {
@@ -64,7 +72,39 @@ void draw() {
   opencv.invert(); // TODO (figure out if we should be calling this twice!)
 
   processedImage = opencv.getSnapshot();
+ 
+  background(255); 
+  if (clear == true) {
+    snapshot = loadImage("blankbg.jpg");
+    clear = false;
+  }
+  image(snapshot, 0, 0);
+    
+  //image(processedImage, 0, 0);
   
-  image(processedImage, 0, 0);
-  
+}
+
+
+void keyReleased() {
+  if (key == 's' || key == 'S') {
+    //snapshot = get();
+    snapshot = opencv.getSnapshot(); // get whatever is currently on opencv, should be processed image video feed
+    println("snapshot");
+  }
+  if (key == 'm' || key == 'M') {
+    mirrorMode = !mirrorMode;
+    println("mirror");
+    print(mirrorMode);
+  }  
+
+  if (key == 'd' || key == 'D') {
+    debugging = !debugging;
+    println("debugging");
+    print(debugging);
+  }
+ 
+  if (key == 'c' || key == 'C') {
+    clear = true;
+    println("clear");
+  }      
 }
