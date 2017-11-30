@@ -20,7 +20,7 @@ float contrast = 1.01;
 int threshold = 129;
 int blurSize = 4;
 
-int zoom = 100;
+int zoom = 0;
 int posX = 0;
 int posY = 0;
 
@@ -41,6 +41,7 @@ PImage mirrorSnapshot;
 
 //gif
 PImage curr_frame;
+ArrayList<PImage> newGifFrames = new ArrayList<PImage>();
 ArrayList<PImage> gifFrames = new ArrayList<PImage>();
 int gifStartingTime;
 int gifRecordingTimePassed = 0;
@@ -103,10 +104,11 @@ void draw() {
   background(255); 
   if (clear == true) {
     snapshot = loadImage("blankbg.jpg");
+    gifFrames = new ArrayList<PImage>();   
     clear = false;
   }
 
-  if (gifFrames.size() > 0 && recording == false) { 
+  if (gifFrames.size() > 0) {
     if (gifForward) {
       image(gifFrames.get(gifFrameIndex), posX - zoom/2, posY - zoom/2, width + zoom, height + zoom); // SHOW      
       gifFrameIndex += 1;
@@ -143,7 +145,7 @@ void draw() {
 
   if (recording) {
       curr_frame = opencv.getSnapshot();
-      gifFrames.add(curr_frame);
+      newGifFrames.add(curr_frame);
       
       // PRINT HOW MUCH TIME IT HAS PASSED FROM RECORDING EVERY SECOND
       if (millis() > gifStartingTime + 1000) {
@@ -155,6 +157,7 @@ void draw() {
       // DONE WITH RECORDING
       if (millis() > gifStartingTime + gifMaxDuration) {
         recording = false;
+        gifFrames = newGifFrames;
         println("stop recording");
       }    
   }
@@ -203,7 +206,8 @@ void keyReleased() {
     println("start recording");
     gifStartingTime = millis();
 
-    gifFrames = new ArrayList<PImage>(); // clean gif frames
+    newGifFrames = new ArrayList<PImage>();
+    // gifFrames = new ArrayList<PImage>(); // clean gif frames
     recording = true;
   }  
 
