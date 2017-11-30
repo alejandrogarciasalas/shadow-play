@@ -52,8 +52,8 @@ int buttonBgColor;
 void setup() {
   frameRate(15);
   
-  video = new Capture(this, 640, 480);
-  //video = new Capture(this, 640, 480, "USB2.0 PC CAMERA");
+  //video = new Capture(this, 640, 480);
+  video = new Capture(this, 640, 480, "USB Camera");
   video.start();
   
   opencv = new OpenCV(this, 640, 480);

@@ -2,21 +2,25 @@ import gab.opencv.*;
 import java.awt.Rectangle;
 import processing.video.*;
 import controlP5.*;
+import com.hamoid.*;
 
 OpenCV opencv;
 Capture video;
+
 PImage src, preProcessedImage, processedImage;
 
+VideoExport videoExport;
+
 // CALIBRATION VARS
-int PROJECTOR_WIDTH = 1024; // old was 640
-int PROJECTOR_HEIGHT = 768; // old was 480
+int PROJECTOR_WIDTH = 640; // old was 640
+int PROJECTOR_HEIGHT = 480; // old was 480
 
 // get from calibration program
-float contrast = 1.35; 
-int threshold = 75;
+float contrast = 1.01; 
+int threshold = 129;
 int blurSize = 4;
 
-int zoom = 0;
+int zoom = 200;
 
 // change if neccesary...
 int brightness = 0;
@@ -27,6 +31,7 @@ boolean mirrorMode = false;
 boolean clear=false;
 boolean debugging = false;
 boolean recording = false;
+boolean videoRecording = false;
 
 // EFFECT VARS
 PImage snapshot;
@@ -37,14 +42,14 @@ PImage curr_frame;
 ArrayList<PImage> gifFrames = new ArrayList<PImage>();
 int gifStartingTime;
 int gifRecordingTimePassed = 0;
-int gifMaxDuration = 6000;
+int gifMaxDuration = 5000;
 int gif_frame_index = 0;
 
 void setup() {
   // frameRate(15);
   
-  video = new Capture(this, PROJECTOR_WIDTH, PROJECTOR_HEIGHT);
-  //video = new Capture(this, 640, 480, "USB2.0 PC CAMERA");
+  //video = new Capture(this, PROJECTOR_WIDTH, PROJECTOR_HEIGHT);
+  video = new Capture(this, PROJECTOR_WIDTH, PROJECTOR_HEIGHT, "USB Camera");
   video.start();
   
   opencv = new OpenCV(this, PROJECTOR_WIDTH, PROJECTOR_HEIGHT);
@@ -54,6 +59,8 @@ void setup() {
   snapshot = loadImage("blankbg.jpg");
   
   println("debugging: " + debugging);
+  videoExport = new VideoExport(this);
+  videoExport.setDebugging(debugging);  
 }
 
 void draw() {
@@ -96,15 +103,12 @@ void draw() {
     clear = false;
   }
 
-  if (gifFrames.size() > 0) {
+  if (gifFrames.size() > 0 && recording == false) {
     image(gifFrames.get(gif_frame_index), 0 - zoom/2, 0 - zoom/2, width + zoom, height + zoom); // SHOW   
     gif_frame_index = (gif_frame_index + 1) % gifFrames.size(); // so it loops around...  
   } else { // just static
     image(snapshot, 0 - zoom/2, 0 - zoom/2, width + zoom, height + zoom); // SHOW   
   }
-  
-  
-    
 
   if (mirrorMode == true) {
     mirrorSnapshot = opencv.getSnapshot(); // get whatever is currently on opencv, should be processed image video feed
@@ -138,6 +142,10 @@ void draw() {
         println("stop recording");
       }    
   }
+
+  if (videoRecording) {
+    videoExport.saveFrame();
+  }  
 }
 
 
@@ -168,7 +176,27 @@ void keyReleased() {
     gifStartingTime = millis();
     gifFrames = new ArrayList<PImage>(); // clean gif frames
     recording = true;
-  }          
+  }  
+
+  if(key == 'v' || key == 'V') {
+    if (videoRecording == true) {
+      videoRecording = !videoRecording;
+      videoExport.endMovie();   
+    } else {
+      videoRecording = !videoRecording;
+      videoExport.setMovieFileName(frameCount + ".mp4");
+      videoExport.startMovie();
+      println("Start movie.");
+    }
+  }
+  
+  if (key == 'q') {
+    if (videoRecording == true) {
+      videoExport.endMovie();
+    }
+    exit();
+  }
+  
 }
 
 void keyPressed() {
