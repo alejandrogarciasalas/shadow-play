@@ -20,11 +20,12 @@ float contrast = 1.01;
 int threshold = 129;
 int blurSize = 4;
 
-int zoom = 200;
+int zoom = 100;
+int posX = 0;
+int posY = 0;
 
 // change if neccesary...
 int brightness = 0;
-
 
 // STATE VARS
 boolean mirrorMode = false;
@@ -32,6 +33,7 @@ boolean clear=false;
 boolean debugging = false;
 boolean recording = false;
 boolean videoRecording = false;
+boolean zoomCalibration = false;
 
 // EFFECT VARS
 PImage snapshot;
@@ -43,11 +45,11 @@ ArrayList<PImage> gifFrames = new ArrayList<PImage>();
 int gifStartingTime;
 int gifRecordingTimePassed = 0;
 int gifMaxDuration = 5000;
-int gif_frame_index = 0;
+int gifFrameIndex = 0;
+boolean gifForward = true;
 
 void setup() {
   // frameRate(15);
-  
   //video = new Capture(this, PROJECTOR_WIDTH, PROJECTOR_HEIGHT);
   video = new Capture(this, PROJECTOR_WIDTH, PROJECTOR_HEIGHT, "USB Camera");
   video.start();
@@ -93,39 +95,53 @@ void draw() {
 
   opencv.blur(blurSize);
   
-  opencv.invert(); // TODO (figure out if we should be calling this twice!)
+  opencv.invert();
 
   processedImage = opencv.getSnapshot();
- 
+
+  // ******************** DRAWING ********************
   background(255); 
   if (clear == true) {
     snapshot = loadImage("blankbg.jpg");
     clear = false;
   }
 
-  if (gifFrames.size() > 0 && recording == false) {
-    image(gifFrames.get(gif_frame_index), 0 - zoom/2, 0 - zoom/2, width + zoom, height + zoom); // SHOW   
-    gif_frame_index = (gif_frame_index + 1) % gifFrames.size(); // so it loops around...  
+  if (gifFrames.size() > 0 && recording == false) { 
+    if (gifForward) {
+      image(gifFrames.get(gifFrameIndex), posX - zoom/2, posY - zoom/2, width + zoom, height + zoom); // SHOW      
+      gifFrameIndex += 1;
+      if (gifFrameIndex == gifFrames.size()) {
+        gifForward = false;
+        gifFrameIndex = gifFrames.size() - 1;
+      } 
+    } else {  
+      image(gifFrames.get(gifFrameIndex), posX - zoom/2, posY - zoom/2, width + zoom, height + zoom); // SHOW
+      gifFrameIndex -= 1;
+      if (gifFrameIndex < 0) {
+        gifForward = true;
+        gifFrameIndex = 0;
+      }      
+    }
+
+
   } else { // just static
-    image(snapshot, 0 - zoom/2, 0 - zoom/2, width + zoom, height + zoom); // SHOW   
+    image(snapshot, posX - zoom/2, posY - zoom/2, width + zoom, height + zoom); // SHOW   
   }
 
-  if (mirrorMode == true) {
+  if (mirrorMode) {
     mirrorSnapshot = opencv.getSnapshot(); // get whatever is currently on opencv, should be processed image video feed
     pushMatrix();
     translate(mirrorSnapshot.width,0);
     scale(-1,1);
-    image(mirrorSnapshot, 0 - zoom/2, 0 - zoom/2, width + zoom, height + zoom); // SHOW
+    image(mirrorSnapshot, posX - zoom/2, posY - zoom/2, width + zoom, height + zoom); // SHOW
     popMatrix();  
   } 
-  if (debugging == true) {
-    image(processedImage, 0, 0, width/4, height/4);
-    //zoom = mouseX;
-    // println("zoom: " + zoom);
-    //image(processedImage, 0 - zoom/2, 0 - zoom/2, width + zoom, height + zoom);
-  }
 
-  if (recording == true) {
+  if (videoRecording) {
+    videoExport.saveFrame();
+  } 
+
+  if (recording) {
       curr_frame = opencv.getSnapshot();
       gifFrames.add(curr_frame);
       
@@ -143,9 +159,16 @@ void draw() {
       }    
   }
 
-  if (videoRecording) {
-    videoExport.saveFrame();
-  }  
+  if (debugging) {
+    if (zoomCalibration == true) {
+      //zoom = mouseX;
+      // println("zoom: " + zoom);
+      image(processedImage, 0, 0, (width + zoom)/4, (height + zoom)/4);    
+      image(processedImage, posX - zoom/2, posY - zoom/2, width + zoom, height + zoom);    
+    }
+    image(processedImage, 0, 0, width/4, height/4);
+  } 
+
 }
 
 
@@ -165,7 +188,12 @@ void keyReleased() {
     debugging = !debugging;
     println("debugging: " + debugging);
   }
- 
+
+  if (key == 'z' || key == 'Z') {
+    zoomCalibration = !zoomCalibration;
+    println("zoom calibration: " + zoomCalibration);
+  }
+  
   if (key == 'c' || key == 'C') {
     clear = true;
     println("clear");
@@ -174,6 +202,7 @@ void keyReleased() {
   if (key == 'r' || key == 'R') {
     println("start recording");
     gifStartingTime = millis();
+
     gifFrames = new ArrayList<PImage>(); // clean gif frames
     recording = true;
   }  
@@ -196,17 +225,38 @@ void keyReleased() {
     }
     exit();
   }
-  
 }
 
 void keyPressed() {
+  if (key == 'o' || key == 'O') {
+    zoom += 10;
+    println("zoom: " + zoom);
+  } else if (key == 'l' || key == 'L') {
+    zoom -= 10;
+    println("zoom: " + zoom);
+  }
+
   if (key == CODED) {
     if (keyCode == UP) {
-      zoom += 1;
-      println(zoom);
+
+      posY += 10;
+      println("posY:" + posY);
+
     } else if (keyCode == DOWN) {
-      zoom -= 1;
-      println(zoom);
-    } 
+
+      posY -= 10;
+      println("posY:" + posY);
+
+    } else if (keyCode == LEFT) {
+
+      posX -= 10;
+      println("posX:" + posX);
+
+    } else if (keyCode == RIGHT) {
+
+      posX += 10;
+      println("posX:" + posX);
+
+    }      
   }
 }
