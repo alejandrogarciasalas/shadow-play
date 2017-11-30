@@ -26,13 +26,22 @@ int brightness = 0;
 boolean mirrorMode = false;
 boolean clear=false;
 boolean debugging = false;
+boolean recording = false;
 
 // EFFECT VARS
 PImage snapshot;
 PImage mirrorSnapshot;
 
+//gif
+PImage curr_frame;
+ArrayList<PImage> gifFrames = new ArrayList<PImage>();
+int gifStartingTime;
+int gifRecordingTimePassed = 0;
+int gifMaxDuration = 6000;
+int gif_frame_index = 0;
+
 void setup() {
-  frameRate(15);
+  // frameRate(15);
   
   video = new Capture(this, PROJECTOR_WIDTH, PROJECTOR_HEIGHT);
   //video = new Capture(this, 640, 480, "USB2.0 PC CAMERA");
@@ -86,7 +95,15 @@ void draw() {
     snapshot = loadImage("blankbg.jpg");
     clear = false;
   }
-  image(snapshot, 0, 0);
+
+  if (gifFrames.size() > 0) {
+    image(gifFrames.get(gif_frame_index), 0 - zoom/2, 0 - zoom/2, width + zoom, height + zoom); // SHOW   
+    gif_frame_index = (gif_frame_index + 1) % gifFrames.size(); // so it loops around...  
+  } else { // just static
+    image(snapshot, 0 - zoom/2, 0 - zoom/2, width + zoom, height + zoom); // SHOW   
+  }
+  
+  
     
 
   if (mirrorMode == true) {
@@ -94,16 +111,33 @@ void draw() {
     pushMatrix();
     translate(mirrorSnapshot.width,0);
     scale(-1,1);
-    image(mirrorSnapshot,0,0);
+    image(mirrorSnapshot, 0 - zoom/2, 0 - zoom/2, width + zoom, height + zoom); // SHOW
     popMatrix();  
   } 
   if (debugging == true) {
-    //image(processedImage, 0, 0, width/4, height/4);
-    //println(mouseX);
-    zoom = mouseX;
-    image(processedImage, 0 - zoom, 0 - zoom, width + zoom, height + zoom);
+    image(processedImage, 0, 0, width/4, height/4);
+    //zoom = mouseX;
+    // println("zoom: " + zoom);
+    //image(processedImage, 0 - zoom/2, 0 - zoom/2, width + zoom, height + zoom);
   }
-  
+
+  if (recording == true) {
+      curr_frame = opencv.getSnapshot();
+      gifFrames.add(curr_frame);
+      
+      // PRINT HOW MUCH TIME IT HAS PASSED FROM RECORDING EVERY SECOND
+      if (millis() > gifStartingTime + 1000) {
+        println(millis());
+        gifRecordingTimePassed += 1;
+        println("time passed: "  + gifRecordingTimePassed);
+      }
+
+      // DONE WITH RECORDING
+      if (millis() > gifStartingTime + gifMaxDuration) {
+        recording = false;
+        println("stop recording");
+      }    
+  }
 }
 
 
@@ -127,7 +161,14 @@ void keyReleased() {
   if (key == 'c' || key == 'C') {
     clear = true;
     println("clear");
-  }      
+  }   
+
+  if (key == 'r' || key == 'R') {
+    println("start recording");
+    gifStartingTime = millis();
+    gifFrames = new ArrayList<PImage>(); // clean gif frames
+    recording = true;
+  }          
 }
 
 void keyPressed() {
