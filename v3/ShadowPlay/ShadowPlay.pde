@@ -53,12 +53,13 @@ boolean gifForward = true;
 void setup() {
   // frameRate(15);
   //video = new Capture(this, PROJECTOR_WIDTH, PROJECTOR_HEIGHT);
-  video = new Capture(this, PROJECTOR_WIDTH, PROJECTOR_HEIGHT, "USB Camera");
+  video = new Capture(this, PROJECTOR_WIDTH, PROJECTOR_HEIGHT, "USB Camera #2");
   video.start();
   
   opencv = new OpenCV(this, PROJECTOR_WIDTH, PROJECTOR_HEIGHT);
   
-  size(1024, 768, P2D); // SHOULD MATCH PROJECTOR DIMENSIONS
+  //size(1024, 768, P2D); // SHOULD MATCH PROJECTOR DIMENSIONS
+  fullScreen(P2D, 2);
   
   snapshot = loadImage("blankbg.jpg");
   
@@ -103,7 +104,7 @@ void draw() {
 
 
   opencvCropped = new OpenCV(this, processedImage);
-  opencvCropped.setROI(60, 80, 340, 300);
+  //opencvCropped.setROI(60, 80, 340, 300);
   processedImage = opencvCropped.getSnapshot();
 
   // ******************** DRAWING ********************
