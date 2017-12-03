@@ -5,7 +5,7 @@ import controlP5.*;
 import com.hamoid.*;
 
 OpenCV opencv;
-OpenCV opencvCropped;
+OpenCV opencv2;
 Capture video;
 
 PImage src, preProcessedImage, processedImage;
@@ -101,11 +101,6 @@ void draw() {
 
   processedImage = opencv.getSnapshot();
 
-
-  opencvCropped = new OpenCV(this, processedImage);
-  opencvCropped.setROI(60, 80, 340, 300);
-  processedImage = opencvCropped.getSnapshot();
-
   // ******************** DRAWING ********************
   background(255); 
   if (clear == true) {
@@ -116,14 +111,14 @@ void draw() {
 
   if (gifFrames.size() > 0) {
     if (gifForward) {
-      image(gifFrames.get(gifFrameIndex), 0, 0, width, height); // SHOW      
+      image(gifFrames.get(gifFrameIndex), posX - zoom/2, posY - zoom/2, width + zoom, height + zoom); // SHOW      
       gifFrameIndex += 1;
       if (gifFrameIndex == gifFrames.size()) {
         gifForward = false;
         gifFrameIndex = gifFrames.size() - 1;
       } 
     } else {  
-      image(gifFrames.get(gifFrameIndex), 0, 0, width, height); // SHOW
+      image(gifFrames.get(gifFrameIndex), posX - zoom/2, posY - zoom/2, width + zoom, height + zoom); // SHOW
       gifFrameIndex -= 1;
       if (gifFrameIndex < 0) {
         gifForward = true;
@@ -133,11 +128,11 @@ void draw() {
 
 
   } else { // just static
-    image(snapshot, 0, 0, width, height); // SHOW   
+    image(snapshot, posX - zoom/2, posY - zoom/2, width + zoom, height + zoom); // SHOW   
   }
 
   // if (mirrorMode) {
-  //   mirrorSnapshot = opencvCropped.getSnapshot(); // get whatever is currently on opencv, should be processed image video feed
+  //   mirrorSnapshot = opencv.getSnapshot(); // get whatever is currently on opencv, should be processed image video feed
   //   pushMatrix();
   //   translate(mirrorSnapshot.width,0);
   //   scale(-1,1);
@@ -150,7 +145,7 @@ void draw() {
   } 
 
   if (recording) {
-      curr_frame = opencvCropped.getSnapshot();
+      curr_frame = opencv.getSnapshot();
       newGifFrames.add(curr_frame);
       
       // PRINT HOW MUCH TIME IT HAS PASSED FROM RECORDING EVERY SECOND
@@ -171,10 +166,15 @@ void draw() {
   if (debugging) {
     if (zoomCalibration == true) {
       //zoom = mouseX;
-      // println("zoom: " + zoom);    
+      // println("zoom: " + zoom);
       image(processedImage, posX - zoom/2, posY - zoom/2, width + zoom, height + zoom);    
     }
-    image(processedImage, 0, 0, width/4, height/4);
+    //image(processedImage, 0, 0, width/4, height/4);
+
+    opencv2 = new OpenCV(this, processedImage);
+    println(opencv2.height);
+    opencv2.setROI(0, 0, 400, 400);
+    image(opencv2.getSnapshot(), 0, 0);
   } 
 
 }
@@ -183,7 +183,8 @@ void draw() {
 void keyReleased() {
   if (key == 's' || key == 'S') {
     //snapshot = get();
-    snapshot = opencvCropped.getSnapshot(); // get whatever is currently on opencv, should be processed image video feed
+    opencv.setROI(0, 0, 500, 500);
+    snapshot = opencv.getSnapshot(); // get whatever is currently on opencv, should be processed image video feed
     println("snapshot");
   }
   if (key == 'm' || key == 'M') {
