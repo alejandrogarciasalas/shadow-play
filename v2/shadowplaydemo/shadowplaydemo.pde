@@ -20,6 +20,17 @@ boolean debugging = true;
 
 boolean clear=false;
 
+//gif
+boolean recording = false;
+PImage curr_frame;
+ArrayList<PImage> newGifFrames = new ArrayList<PImage>();
+ArrayList<PImage> gifFrames = new ArrayList<PImage>();
+int gifStartingTime;
+int gifRecordingTimePassed = 0;
+int gifMaxDuration = 5000;
+int gifFrameIndex = 0;
+boolean gifForward = true;
+
 void setup()
 {
   size(displayWidth, displayHeight, P2D); 
@@ -37,7 +48,7 @@ void setup()
   kpc = new KinectProjectorToolkit(this, kinect.depthWidth(), kinect.depthHeight());
   kpc.loadCalibration("calibration.txt");
   
-  kpc.setContourSmoothness(4);
+  kpc.setContourSmoothness(2);
   
   projectedGraphics = initializeProjectedGraphics();
   
@@ -48,8 +59,7 @@ void setup()
   fireballs = new ArrayList<Fireball>();
 }
 
-void draw()
-{  
+void draw(){  
   kinect.update();  
   kpc.setDepthMapRealWorld(kinect.depthMapRealWorld()); 
   
@@ -70,10 +80,32 @@ void draw()
   background(255); 
   if (clear == true) {
     snapshot = loadImage("blank.jpg");
+    gifFrames = new ArrayList<PImage>();
     clear = false;
   }
-  
-  image(snapshot, 0, 0);
+
+  if (gifFrames.size() > 0) {
+    if (gifForward) {
+      image(gifFrames.get(gifFrameIndex), 0, 0, width, height); // SHOW      
+      gifFrameIndex += 1;
+      if (gifFrameIndex == gifFrames.size()) {
+        gifForward = false;
+        gifFrameIndex = gifFrames.size() - 1;
+      } 
+    } else {  
+      image(gifFrames.get(gifFrameIndex), 0, 0, width, height); // SHOW
+      gifFrameIndex -= 1;
+      if (gifFrameIndex < 0) {
+        gifForward = true;
+        gifFrameIndex = 0;
+      }      
+    }
+
+
+  } else { // just static
+    image(snapshot, 0, 0); // SHOW   
+  }  
+//  image(snapshot, 0, 0);
   
 
   
@@ -114,7 +146,27 @@ void draw()
   image(mirrorIcon, displayWidth - 250, 10);
 
   PImage clearIcon = loadImage("clear_icon.png");
-  image(clearIcon, displayWidth - 150, 10);  
+  image(clearIcon, displayWidth - 150, 10); 
+ 
+  if (recording) {
+      curr_frame = opencvCropped.getSnapshot();
+      newGifFrames.add(curr_frame);
+      
+      // PRINT HOW MUCH TIME IT HAS PASSED FROM RECORDING EVERY SECOND
+      if (millis() > gifStartingTime + 1000) {
+        println(millis());
+        gifRecordingTimePassed += 1;
+        println("time passed: "  + gifRecordingTimePassed);
+      }
+
+      // DONE WITH RECORDING
+      if (millis() > gifStartingTime + gifMaxDuration) {
+        recording = false;
+        gifFrames = newGifFrames;
+        println("stop recording");
+      }    
+  }
+ 
 }
 
 // hit the spacebar to shoot a fireball! (needs a detected skeleton)
@@ -229,7 +281,16 @@ void keyReleased() {
   if (key == 'c' || key == 'C') {
     clear = true;
     println("clear");
-  }      
+  } 
+
+  if (key == 'r' || key == 'R') {
+    println("start recording");
+    gifStartingTime = millis();
+
+    newGifFrames = new ArrayList<PImage>();
+    // gifFrames = new ArrayList<PImage>(); // clean gif frames
+    recording = true;
+  }    
 }
 
 
