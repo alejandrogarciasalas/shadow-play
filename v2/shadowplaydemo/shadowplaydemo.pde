@@ -16,7 +16,7 @@ PImage mirrorSnapshot;
 
 boolean mirrorMode = false;
 
-boolean debugging = true;
+boolean debugging = false;
 
 boolean clear=false;
 
@@ -31,9 +31,31 @@ int gifMaxDuration = 5000;
 int gifFrameIndex = 0;
 boolean gifForward = true;
 
+
+// ARDUINO
+import processing.serial.*;
+import cc.arduino.*;
+Arduino arduino;
+int buttonState = 0;             //reading from input
+int lastButtonState = Arduino.LOW;   //previous reading for debounce
+int pot = 0; 
+int potValue = 0;
+int buttonPin = 2;
+// the following variables are unsigned longs because the time, measured in
+// milliseconds, will quickly become a bigger number than can be stored in an int.
+int lastDebounceTime = 0;  // the last time the output pin was toggled
+int debounceDelay = 50;    // the debounce time; increase if the output flickers
+boolean pressed = false;
+
+//
+ 
+int effectState = 1;
+
 void setup()
 {
   size(displayWidth, displayHeight, P2D); 
+
+//  fullScreen(P2D);
 
   // setup Kinect
   kinect = new SimpleOpenNI(this); 
@@ -57,9 +79,104 @@ void setup()
   // load fireballs data
   pgFireball = createGraphics(400, 400);
   fireballs = new ArrayList<Fireball>();
+  
+  // ARDUINO
+  println(Arduino.list());
+  arduino = new Arduino(this, Arduino.list()[3], 57600);
+  int builtinPin = 13;
+  arduino.pinMode(builtinPin, Arduino.OUTPUT);
+  arduino.analogWrite(builtinPin, 255);
+  
+  arduino.pinMode(pot, Arduino.INPUT);
+  arduino.pinMode(buttonPin, Arduino.INPUT);
 }
 
 void draw(){  
+  PImage cameraIcon = loadImage("camera_icon.png");  
+  PImage loopIcon = loadImage("loop_icon.png");
+  PImage mirrorIcon = loadImage("mirror_icon.png");
+  PImage clearIcon = loadImage("clear_icon.png");
+  PImage fireIcon = loadImage("fire_icon.png");
+  
+    
+  // ARDUINO
+  int potValue = arduino.analogRead(pot); 
+  int reading = arduino.digitalRead(buttonPin);
+  
+  if (reading != lastButtonState) {
+    // reset debouncing timer
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) { 
+      // if the button state has changed:
+      if (reading != buttonState) {
+        buttonState = reading;
+        
+        // only toggle the LED if the new button state is HIGH
+        if (buttonState == Arduino.LOW) {
+          pressed = true;
+          if (potValue < 204) {
+            effectState = 1;
+          }
+          if ((potValue >= 204) && (potValue < 409)) {
+            effectState = 2;
+          }
+          if ((potValue >= 409) && (potValue < 614)) {
+            effectState = 3;
+          }
+          if ((potValue >= 614) && (potValue < 819)) {
+            effectState = 4;
+          }
+          if ((potValue >= 819) && (potValue < 1024)) {
+            effectState = 5;          
+          }
+          println("effect state: " + effectState);
+        }
+       if (buttonState == Arduino.HIGH) {
+          pressed = false;
+//          if (effectState == 3) {
+//            recording = false;
+//            gifFrames = newGifFrames;
+//            println("stop recording");      
+//          }
+      
+        }
+       }
+    }
+    lastButtonState = reading;
+  // ARDUINO END /.
+  
+  // CAMERA!  
+  if (effectState == 1 && pressed == true) {
+      snapshot = get();
+      println("snapshot");
+  }
+  if (effectState == 2 && pressed == true) {  
+    mirrorMode = !mirrorMode;
+    println("mirror: " + mirrorMode);
+  }
+  
+  if (effectState == 3 && pressed == true && recording == false) {
+    println("start recording");
+    gifStartingTime = millis();
+    newGifFrames = new ArrayList<PImage>();
+    recording = true;  
+  }
+
+  if (effectState == 4 && pressed == true) {
+    int[] userList = kinect.getUsers();
+    if (userList.length > 0)
+      addFireBall(userList[(int)random(userList.length)]);
+      println("fireball!");
+  }  
+  
+  if (effectState == 5 && pressed == true) {
+    clear = true;
+    println("clear");  
+  }
+  // CAMERA END /.
+  
   kinect.update();  
   kpc.setDepthMapRealWorld(kinect.depthMapRealWorld()); 
   
@@ -88,7 +205,7 @@ void draw(){
     if (gifForward) {
       image(gifFrames.get(gifFrameIndex), 0, 0, width, height); // SHOW      
       gifFrameIndex += 1;
-      if (gifFrameIndex == gifFrames.size()) {
+      if (gifFrameIndex >= gifFrames.size()) {
         gifForward = false;
         gifFrameIndex = gifFrames.size() - 1;
       } 
@@ -135,21 +252,9 @@ void draw(){
     image(mirrorSnapshot,0,0);
     popMatrix();  
   }
-
-  PImage cameraIcon = loadImage("camera_icon.png");
-  image(cameraIcon, displayWidth - 450, 10);
-  
-  PImage tencameraIcon = loadImage("10_camera_icon.png");
-  image(tencameraIcon, displayWidth - 350, 10);
-
-  PImage mirrorIcon = loadImage("mirror_icon.png");
-  image(mirrorIcon, displayWidth - 250, 10);
-
-  PImage clearIcon = loadImage("clear_icon.png");
-  image(clearIcon, displayWidth - 150, 10); 
  
   if (recording) {
-      curr_frame = opencvCropped.getSnapshot();
+      curr_frame = get();
       newGifFrames.add(curr_frame);
       
       // PRINT HOW MUCH TIME IT HAS PASSED FROM RECORDING EVERY SECOND
@@ -166,7 +271,21 @@ void draw(){
         println("stop recording");
       }    
   }
- 
+  if (potValue < 204) {;
+    image(cameraIcon, displayWidth - 120, 10);
+  }
+  if ((potValue >= 204) && (potValue < 409)) {
+    image(mirrorIcon, displayWidth - 120, 10);
+  }
+  if ((potValue >= 409) && (potValue < 614)) {
+    image(loopIcon, displayWidth - 120, 10);
+  }
+  if ((potValue >= 614) && (potValue < 819)) {
+    image(fireIcon, displayWidth - 120, 10);
+  }
+  if ((potValue >= 819) && (potValue < 1024)) { 
+    image(clearIcon, displayWidth - 120, 10);         
+  }   
 }
 
 // hit the spacebar to shoot a fireball! (needs a detected skeleton)
@@ -268,8 +387,7 @@ void keyReleased() {
   }
   if (key == 'm' || key == 'M') {
     mirrorMode = !mirrorMode;
-    println("mirror");
-    print(mirrorMode);
+    println("mirror: " + mirrorMode);
   }  
 
   if (key == 'd' || key == 'D') {
