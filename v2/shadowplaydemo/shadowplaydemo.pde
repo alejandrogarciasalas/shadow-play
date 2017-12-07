@@ -94,6 +94,7 @@ void setup()
 void draw(){  
   PImage cameraIcon = loadImage("camera_icon.png");  
   PImage loopIcon = loadImage("loop_icon.png");
+  PImage loopIconRecord = loadImage("loop_icon_record.png");
   PImage mirrorIcon = loadImage("mirror_icon.png");
   PImage clearIcon = loadImage("clear_icon.png");
   PImage fireIcon = loadImage("fire_icon.png");
@@ -278,7 +279,11 @@ void draw(){
     image(mirrorIcon, displayWidth - 120, 10);
   }
   if ((potValue >= 409) && (potValue < 614)) {
-    image(loopIcon, displayWidth - 120, 10);
+    if (recording) {
+    image(loopIconRecord, displayWidth - 120, 10);
+    } else {
+      image(loopIcon, displayWidth - 120, 10);
+    }  
   }
   if ((potValue >= 614) && (potValue < 819)) {
     image(fireIcon, displayWidth - 120, 10);
